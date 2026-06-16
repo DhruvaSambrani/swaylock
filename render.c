@@ -1,11 +1,13 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <wayland-client.h>
 #include "cairo.h"
 #include "background-image.h"
 #include "swaylock.h"
 #include "log.h"
+#include <time.h>
 
 #define M_PI 3.14159265358979323846
 const float TYPE_INDICATOR_RANGE = M_PI / 3.0f;
@@ -58,7 +60,7 @@ void render(struct swaylock_surface *surface) {
 		return; // not yet configured
 	}
 
-	if (!surface->dirty || surface->frame) {
+	if (surface->frame) {
 		// Nothing to do or frame already pending
 		return;
 	}
@@ -131,6 +133,14 @@ static void configure_font_drawing(cairo_t *cairo, struct swaylock_state *state,
 	cairo_font_options_destroy(fo);
 }
 
+static void get_time(char *time_string) {
+	time_t rawtime;
+	struct tm * timeinfo;
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
+	strftime(time_string, 100, "%H:%M:%S", timeinfo);
+}
+
 static bool render_frame(struct swaylock_surface *surface) {
 	struct swaylock_state *state = surface->state;
 
@@ -139,6 +149,7 @@ static bool render_frame(struct swaylock_surface *surface) {
 
 	char attempts[4]; // like i3lock: count no more than 999
 	char *text = NULL;
+	char time_string[100];
 	const char *layout_text = NULL;
 
 	bool draw_indicator = state->args.show_indicator &&
@@ -154,6 +165,14 @@ static bool render_frame(struct swaylock_surface *surface) {
 			text = "Verifying";
 		} else if (state->auth_state == AUTH_STATE_INVALID) {
 			text = "Wrong";
+		} else if (state->auth_state == AUTH_STATE_IDLE) {
+			get_time(time_string);
+			text = malloc(strlen(time_string) + 1);
+			if (text != NULL) {
+				strcpy(text, time_string);
+			} else {
+				text = "Failed to get time";
+			}
 		} else {
 			// Caps Lock has higher priority
 			if (state->xkb.caps_lock && state->args.show_caps_lock_text) {
