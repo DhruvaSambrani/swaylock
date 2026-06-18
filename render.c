@@ -167,12 +167,7 @@ static bool render_frame(struct swaylock_surface *surface) {
 			text = "Wrong";
 		} else if (state->auth_state == AUTH_STATE_IDLE) {
 			get_time(time_string);
-			text = malloc(strlen(time_string) + 1);
-			if (text != NULL) {
-				strcpy(text, time_string);
-			} else {
-				text = "Failed to get time";
-			}
+			text = time_string; 
 		} else {
 			// Caps Lock has higher priority
 			if (state->xkb.caps_lock && state->args.show_caps_lock_text) {
