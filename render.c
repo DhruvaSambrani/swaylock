@@ -60,7 +60,7 @@ void render(struct swaylock_surface *surface) {
 		return; // not yet configured
 	}
 
-	if (surface->frame) {
+	if (!surface->dirty || surface->frame) {
 		// Nothing to do or frame already pending
 		return;
 	}

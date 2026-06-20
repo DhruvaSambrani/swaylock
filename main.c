@@ -1061,6 +1061,16 @@ static void term_in(int fd, short mask, void *data) {
 	state.run_display = false;
 }
 
+static void timer_render(void *data) {
+	struct swaylock_state *state = data;
+	damage_state(state);
+
+	struct timespec now;
+	clock_gettime(CLOCK_REALTIME, &now);
+	int ms_until_next_sec = 1000 - (now.tv_nsec / 1000000);
+	loop_add_timer(state->eventloop, ms_until_next_sec, timer_render, state);
+}
+
 // Check for --debug 'early' we also apply the correct loglevel
 // to the forked child, without having to first proces all of the
 // configuration (including from file) before forking and (in the
@@ -1256,6 +1266,11 @@ int main(int argc, char **argv) {
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_RESTART;
 	sigaction(SIGUSR1, &sa, NULL);
+
+	struct timespec now;
+	clock_gettime(CLOCK_REALTIME, &now);
+	int ms_until_next_sec = 1000 - (now.tv_nsec / 1000000);
+	loop_add_timer(state.eventloop, ms_until_next_sec, timer_render, &state);
 
 	state.run_display = true;
 	while (state.run_display) {
