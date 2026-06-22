@@ -135,9 +135,12 @@ static void configure_font_drawing(cairo_t *cairo, struct swaylock_state *state,
 
 static void get_time(char *time_string) {
 	time_t rawtime;
-	struct tm * timeinfo;
 	time(&rawtime);
-	timeinfo = localtime(&rawtime);
+	struct tm *timeinfo = localtime(&rawtime);
+	if (timeinfo == NULL) {
+		strcpy(time_string, "00:00:00");
+		return;
+	}
 	strftime(time_string, 100, "%H:%M:%S", timeinfo);
 }
 
